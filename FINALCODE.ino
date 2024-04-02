@@ -13,10 +13,10 @@ unsigned char hexData[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79
 const int chipSelect = 10;
 
 int solenoidpin = 7;  //Set valve and arduino connection to pin 7
-File dataFile;
-File dataFile2;
-File dataFile3;
-File dataFile4;
+File dataFile;  //CO2 #1  
+File dataFile2; //CO2 #2
+File dataFile3; //Pressure
+File dataFile4; //Valve state
 
 void setup() {
   // Open serial communications and wait for port to open
@@ -117,24 +117,28 @@ void setup() {
 }
 
 void loop() {
-  int closed = 0;
-  long CO2sens1;
-  long CO2sens2;
-  sensor.read();
+  int closed = 0;  //valve state variable
+  long CO2sens1;  //CO2 sensor #1 variable 
+  long CO2sens2;  //CO2 sensor #2 variable 
+  sensor.read();  //reads data from sensor
   delay(500);
-  int pressure = sensor.pressure();
+  int pressure = sensor.pressure();  //retrieves pressure data
   String pdata = String(pressure);
   if (sensor.pressure() > 1100){ // should open around 2.1-2.2 meters underwater
     digitalWrite(solenoidpin, LOW); //close valve
     closed = 1; // set variable to print valve state
    }
-
+  
+  //prints pressure in mbar
+  
   Serial.print("Pressure: "); 
   Serial.print(sensor.pressure()); 
   Serial.println(" mbar");
 
   CO2Serial.write(hexData,9);
   delay(500);
+  
+  //CO2 #1
   for (int i = 0; i < 9; i++)
   {
     if (CO2Serial.available() > 0)  //if sensor setup properly run
@@ -150,12 +154,12 @@ void loop() {
       }
       if (i == 8){
         CO2sens1 = hi * 256 + lo;  //CO2 concentration
-        // Read sensor values
-     
+      
+      // Print sensor values
       Serial.print("CO2 concentration:");
       Serial.print(CO2sens1);
       Serial.println("ppm");
-      CO2Serial2.begin(9600); //Open communications with second co2 sensor
+      CO2Serial2.begin(9600); //Open communications with second CO2 sensor
       }
 
     } else {
@@ -164,7 +168,8 @@ void loop() {
   } 
   CO2Serial2.write(hexData, 9);
   delay(500);
-
+  
+  //CO2 #2
   for (int i = 0, j = 0; i < 9; i++)
   {
     if (CO2Serial2.available() > 0) //If sensor is connected properly run
